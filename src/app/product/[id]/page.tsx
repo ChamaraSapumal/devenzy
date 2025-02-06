@@ -1,26 +1,24 @@
-'use client';
-
 import { products } from '@/data/products';
-import ProductDetails from '@/components/ProductDetails';
+import ProductDetailsWrapper from './ProductDetailsWrapper';
 import { notFound } from 'next/navigation';
-import { Product, Color } from '@/types';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { use } from 'react';
 
-export default function ProductPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
-    const params = use(paramsPromise); // ✅ Unwrapping params using React.use()
+// Generate static paths
+export function generateStaticParams() {
+    return products.map((product) => ({
+        id: product.id,
+    }));
+}
 
-    const product = products.find(p => p.id === params.id);
-    if (!product) return notFound();
+// Unwrap params using await
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params; // Unwrap params before accessing id
+    const product = products.find(p => p.id === id);
 
-    const handleAddToCart = (product: Product, size: string, color: Color) => {
-        console.log('Added to cart:', { product, size, color });
-    };
-
-    const handleAddToWishlist = (product: Product) => {
-        console.log('Added to wishlist:', product);
-    };
+    if (!product) {
+        return notFound();
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -41,11 +39,8 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
                     <span className="text-black">{product.name}</span>
                 </div>
 
-                <ProductDetails
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onAddToWishlist={handleAddToWishlist}
-                />
+                {/* Pass product data to the Client Component */}
+                <ProductDetailsWrapper product={product} />
             </div>
         </div>
     );

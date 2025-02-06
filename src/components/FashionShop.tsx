@@ -5,12 +5,20 @@ import Header from './Header';
 import ProductCard from './ProductCard';
 import { products, categories } from '@/data/products';
 import { Product, CartItem } from '@/types';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
+import { calculateCartTotals } from '@/utils/cartCalculations';
 
 const FashionShop: React.FC = () => {
+    const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [wishlist, setWishlist] = useState<string[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+
+
+    const { total } = calculateCartTotals(cartItems);
+
 
     const filteredProducts = selectedCategory === 'all'
         ? products
@@ -61,6 +69,10 @@ const FashionShop: React.FC = () => {
                     : item
             )
         );
+    };
+
+    const handleCheckout = () => {
+        router.push(`checkout?cartData=${encodeURIComponent(JSON.stringify(cartItems))}`);
     };
 
     return (
@@ -171,13 +183,25 @@ const FashionShop: React.FC = () => {
                             <div className="border-t p-4 bg-white">
                                 <div className="space-y-4">
                                     <div className="flex justify-between text-lg font-semibold">
+                                        <span>Subtotal</span>
+                                        <span>
+                                            ${calculateCartTotals(cartItems).subtotal.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-lg font-semibold">
+                                        <span>Shipping</span>
+                                        <span>
+                                            ${calculateCartTotals(cartItems).shipping.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-lg font-bold">
                                         <span>Total</span>
                                         <span>
-                                            ${cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toFixed(2)}
+                                            ${calculateCartTotals(cartItems).total.toFixed(2)}
                                         </span>
                                     </div>
                                     <button
-                                        onClick={() => {/* Implement checkout */ }}
+                                        onClick={handleCheckout}
                                         className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
                                     >
                                         Checkout

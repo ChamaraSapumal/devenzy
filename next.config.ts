@@ -1,12 +1,10 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  output: 'export', // Export static files for GitHub Pages
+// next.config.js
+const nextConfig = {
+  output: "export",
+  basePath: "/devenzy", // ✅ No trailing slash
+  assetPrefix: "/devenzy/", // ✅ Trailing slash
+  trailingSlash: true,
   images: {
-    unoptimized: true, // Disable Next.js image optimization for GH Pages
+    unoptimized: true,
   },
-  basePath: "/devenzy", // Replace with your GitHub repo name
-  assetPrefix: "/devenzy/", // Important for assets loading
 };
-
-export default nextConfig;

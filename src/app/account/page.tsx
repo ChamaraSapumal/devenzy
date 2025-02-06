@@ -7,6 +7,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { updateProfile } from "firebase/auth";
+import ProfileSettings from '@/components/ProfileSettings';
 
 interface Order {
     id: string;
