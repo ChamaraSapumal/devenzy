@@ -1,10 +1,12 @@
-// next.config.js
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
-  basePath: "/devenzy", // ✅ No trailing slash
-  assetPrefix: "/devenzy/", // ✅ Trailing slash
+  output: 'export',
+  basePath: "/devenzy",
+  assetPrefix: "/devenzy/",
   trailingSlash: true,
   images: {
     unoptimized: true,
   },
 };
+
+module.exports = nextConfig;
