@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import Header from './Header';
 import ProductCard from './ProductCard';
@@ -8,6 +8,7 @@ import { Product, CartItem } from '@/types';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import { calculateCartTotals } from '@/utils/cartCalculations';
+import { searchProducts } from "@/utils/search";
 
 const FashionShop: React.FC = () => {
     const router = useRouter();
@@ -15,14 +16,18 @@ const FashionShop: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [wishlist, setWishlist] = useState<string[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [filteredProducts, setFilteredProducts] = useState(products);
 
 
     const { total } = calculateCartTotals(cartItems);
 
 
-    const filteredProducts = selectedCategory === 'all'
-        ? products
-        : products.filter(product => product.category === selectedCategory);
+    useEffect(() => {
+        const updatedProducts = selectedCategory === 'all'
+            ? products
+            : products.filter(product => product.category === selectedCategory);
+        setFilteredProducts(updatedProducts);
+    }, [selectedCategory]);
 
     const addToCart = (product: Product) => {
         setCartItems(prev => {
@@ -75,15 +80,23 @@ const FashionShop: React.FC = () => {
         router.push(`checkout?cartData=${encodeURIComponent(JSON.stringify(cartItems))}`);
     };
 
+    // Search function
+    const handleSearch = (query: string) => {
+        setFilteredProducts(localSearchProducts(products, query)); // ✅ Use the search function from utils
+    };
+
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Header
                 cartItems={cartItems}
                 onOpenCart={() => setIsCartOpen(true)}
                 onOpenWishlist={() => { }}
+                onSearch={handleSearch}
             />
 
             <main className="max-w-7xl mx-auto px-4 py-8">
+
                 {/* Categories */}
                 <div className="mb-8 overflow-x-auto">
                     <div className="flex gap-4">
@@ -217,3 +230,11 @@ const FashionShop: React.FC = () => {
 };
 
 export default FashionShop;
+
+function localSearchProducts(products: Product[], query: string): Product[] {
+    if (!query.trim()) return products;
+    return products.filter(product =>
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.category.toLowerCase().includes(query.toLowerCase())
+    );
+}

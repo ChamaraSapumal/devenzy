@@ -1,22 +1,48 @@
 "use client";
 
 import React, { useState } from 'react';
-import { CreditCard, Truck, ChevronRight, UserCheck, HomeIcon } from 'lucide-react';
+import { CreditCard, Truck, ChevronRight, UserCheck, HomeIcon, Package, MapPin } from 'lucide-react';
 import { CartItem } from '@/types';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { calculateCartTotals } from '@/utils/cartCalculations';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+    Elements,
+    CardElement,
+    useStripe,
+    useElements
+} from '@stripe/react-stripe-js';
+import { v4 as uuidv4 } from 'uuid';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
+// Replace with your actual Stripe publishable key
+const stripePromise = loadStripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY');
+
+interface OrderTrackingInfo {
+    orderId: string;
+    status: 'processing' | 'shipped' | 'delivered';
+    estimatedDelivery: Date;
+    trackingNumber?: string;
+    shippingMethod?: string;
+}
 
 interface CheckoutPageProps {
     cartItems: CartItem[];
 }
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems }) => {
+const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems }) => {
+    const stripe = useStripe();
+    const elements = useElements();
     const router = useRouter();
     const searchParams = useSearchParams();
     const cartData = searchParams.get('cartData');
     const cartItems = cartData ? JSON.parse(cartData) : initialCartItems;
+
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [orderTracking, setOrderTracking] = useState<OrderTrackingInfo | null>(null);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -26,9 +52,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
         city: '',
         country: '',
         postalCode: '',
-        cardNumber: '',
-        expiryDate: '',
-        cvv: ''
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,14 +61,85 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
         });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const generateOrderTracking = (): OrderTrackingInfo => {
+        const estimatedDelivery = new Date();
+        estimatedDelivery.setDate(estimatedDelivery.getDate() + 5); // 5 days delivery
+
+        return {
+            orderId: uuidv4(),
+            status: 'processing',
+            estimatedDelivery,
+            trackingNumber: `TRACK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+            shippingMethod: 'Standard Shipping'
+        };
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle checkout logic here
-        console.log('Form submitted:', formData);
+
+        if (!stripe || !elements) {
+            return;
+        }
+
+        setIsProcessing(true);
+        setPaymentError(null);
+
+        try {
+            // Create payment intent on your backend
+            const response = await fetch('api/create-payment-intent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: calculateCartTotals(cartItems).total * 100, // Amount in cents
+                    currency: 'usd'
+                })
+            });
+
+            const { clientSecret } = await response.json();
+
+            // Confirm card payment
+            const result = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: elements.getElement(CardElement)!,
+                    billing_details: {
+                        name: `${formData.firstName} ${formData.lastName}`,
+                        email: formData.email,
+                        address: {
+                            city: formData.city,
+                            postal_code: formData.postalCode
+                        }
+                    }
+                }
+            });
+
+            if (result.error) {
+                setPaymentError(result.error.message || 'Payment failed');
+                setIsProcessing(false);
+            } else {
+                // Generate order tracking info
+                const orderInfo = generateOrderTracking();
+                setOrderTracking(orderInfo);
+
+                // Save order to Firestore
+                const orderRef = await addDoc(collection(db, 'orders'), {
+                    ...orderInfo,
+                    customerInfo: formData,
+                    items: cartItems,
+                    createdAt: Timestamp.now()
+                });
+
+                // Redirect to order confirmation
+                router.push(`/order-confirmation?orderId=${orderInfo.orderId}`);
+            }
+        } catch (error) {
+            setPaymentError('An unexpected error occurred');
+            setIsProcessing(false);
+        }
     };
 
     const { subtotal, shipping, total } = calculateCartTotals(cartItems);
-
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -159,63 +253,83 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Card Number</label>
-                                        <input
-                                            type="text"
-                                            name="cardNumber"
-                                            value={formData.cardNumber}
-                                            onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
-                                            placeholder="**** **** **** ****"
-                                            required
+                                        <label className="block text-sm font-medium mb-1">Card Details</label>
+                                        <CardElement
+                                            options={{
+                                                style: {
+                                                    base: {
+                                                        fontSize: '16px',
+                                                        color: '#424770',
+                                                        '::placeholder': {
+                                                            color: '#aab7c4',
+                                                        },
+                                                    },
+                                                    invalid: {
+                                                        color: '#9e2146',
+                                                    },
+                                                },
+                                            }}
                                         />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Expiry Date</label>
-                                            <input
-                                                type="text"
-                                                name="expiryDate"
-                                                value={formData.expiryDate}
-                                                onChange={handleInputChange}
-                                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
-                                                placeholder="MM/YY"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">CVV</label>
-                                            <input
-                                                type="text"
-                                                name="cvv"
-                                                value={formData.cvv}
-                                                onChange={handleInputChange}
-                                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
-                                                placeholder="***"
-                                                required
-                                            />
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
+                            {paymentError && (
+                                <div className="text-red-500 text-sm mb-4">{paymentError}</div>
+                            )}
+
                             <button
                                 type="submit"
+                                disabled={isProcessing}
                                 className="w-full bg-black text-white py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                             >
-                                Complete Order
+                                {isProcessing ? 'Processing...' : 'Complete Order'}
                                 <ChevronRight className="w-4 h-4" />
                             </button>
                             <button
                                 type="button"
-                                onClick={() => router.push('/devenzy/')}
-                                className="w-full bg-gray-200 text-black py-4 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-4"
+                                onClick={() => router.push('/')}
+                                className="w-full mt-4 bg-gray-200 text-black py-4 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-4"
                             >
                                 Go Back Home
                                 <HomeIcon className="w-4 h-4" />
                             </button>
                         </form>
                     </div>
+
+                    {/* Order Tracking Section */}
+                    {orderTracking && (
+                        <div className="max-w-6xl mx-auto px-4 mt-8">
+                            <div className="bg-white rounded-lg shadow-sm p-6">
+                                <h2 className="text-xl font-semibold mb-4 flex items-center">
+                                    <Package className="mr-2" /> Order Tracking
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="font-medium flex items-center">
+                                            <MapPin className="mr-2 text-blue-500" />
+                                            Order ID: {orderTracking.orderId}
+                                        </p>
+                                        <p className="flex items-center">
+                                            <Truck className="mr-2 text-green-500" />
+                                            Status: {orderTracking.status.charAt(0).toUpperCase() + orderTracking.status.slice(1)}
+                                        </p>
+                                        <p>
+                                            Tracking Number: {orderTracking.trackingNumber}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p>
+                                            Shipping Method: {orderTracking.shippingMethod}
+                                        </p>
+                                        <p>
+                                            Estimated Delivery: {orderTracking.estimatedDelivery.toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Order Summary */}
                     <div className="lg:col-span-1">
@@ -259,6 +373,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                 </div>
             </div>
         </div>
+    );
+};
+
+const CheckoutPage: React.FC<CheckoutPageProps> = ({ cartItems }) => {
+    return (
+        <Elements stripe={stripePromise}>
+            <CheckoutForm cartItems={cartItems} />
+        </Elements>
     );
 };
 

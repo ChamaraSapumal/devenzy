@@ -203,7 +203,7 @@ export const products: Product[] = [
         description: 'Timeless aviator sunglasses with a lightweight metal frame and polarized lenses.',
         price: 79.99,
         images: [
-            'https://images.unsplash.com/photo-1507518858358-37352945c171?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
+            'https://images.unsplash.com/photo-1625480862838-aa155da6ac2c?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
             'https://images.unsplash.com/photo-1603437229473-42c27161c85d?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
             'https://images.unsplash.com/photo-1581145448447-225410c911e2?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'  // Replace with your actual image URL
         ],
@@ -243,9 +243,9 @@ export const products: Product[] = [
         description: 'Stylish square sunglasses with a bold acetate frame for a vintage look.',
         price: 69.99,
         images: [
-            'https://images.unsplash.com/photo-1556227846-87091552a844?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
-            'https://images.unsplash.com/photo-1581145449624-7c2b65430f5e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
-            'https://images.unsplash.com/photo-1575535881572-3ef043c258f2?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'  // Replace with your actual image URL
+            'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
+            'https://images.unsplash.com/photo-1581778571772-11f8c6af4103?q=80&w=1885&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your actual image URL
+            'https://images.unsplash.com/photo-1600024914363-d9bf85e438f0?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'  // Replace with your actual image URL
         ],
         category: 'accessories',
         sizes: ['One Size'],
