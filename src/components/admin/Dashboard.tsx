@@ -16,7 +16,10 @@ import { Package, Users, ShoppingCart, Settings, LogOut } from "lucide-react";
 import NewProductForm from "@/components/NewProductForm"; // Adjust the import path as necessary
 import ProductList from "@/components/ProductList"; // Adjust the import path as necessary
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore"
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
 
 const AdminDashboardComponent = () => {
     const [activeTab, setActiveTab] = useState("overview");
@@ -254,12 +257,85 @@ const withAdminAuth = (WrappedComponent: React.ComponentType<any>) => {
             checkAdmin();
         }, [router]);
 
-        if (loading) return <div>Loading...</div>;
+        if (loading) return (
+            <div className="space-y-4 p-4">
+                {/* Skeleton for Stats Cards */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Skeleton height={150} width="100%" />
+                    <Skeleton height={150} width="100%" />
+                    <Skeleton height={150} width="100%" />
+                    <Skeleton height={150} width="100%" />
+                </div>
+
+                {/* Skeleton for Recent Orders Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recent Orders</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>
+                                        <Skeleton width={80} />
+                                    </TableHead>
+                                    <TableHead>
+                                        <Skeleton width={120} />
+                                    </TableHead>
+                                    <TableHead>
+                                        <Skeleton width={80} />
+                                    </TableHead>
+                                    <TableHead>
+                                        <Skeleton width={60} />
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {/* Skeleton rows for the table */}
+                                {Array.from({ length: 5 }).map((_, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <Skeleton width={100} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton width={150} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton width={80} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton width={70} />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                {/* Skeleton for the Product List Search Input and Button */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Products Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div className="flex justify-between">
+                                <Skeleton width={200} height={40} />
+                                <Skeleton width={120} height={40} />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+
         if (!isAdmin) return null;
 
         return <WrappedComponent {...props} />;
     };
 };
+
 
 export const AdminDashboard = withAdminAuth(AdminDashboardComponent);
 export default AdminDashboard;

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { HomeIcon } from 'lucide-react';
 
 interface UserData {
     role?: string;
@@ -117,6 +118,14 @@ export const AdminLogin = () => {
                             disabled={isLoading}
                         >
                             {isLoading ? "Signing in..." : "Sign in"}
+                        </Button>
+                        <Button
+                            type="button"
+                            className="w-full"
+                            disabled={isLoading}
+                            onClick={() => router.push('/')}
+                        >
+                            <HomeIcon className="w-4 h-4" />
                         </Button>
                     </form>
                 </CardContent>

@@ -8,7 +8,8 @@ import {
     getDoc, 
     getDocs, 
     query, 
-    where 
+    where, 
+    deleteDoc 
 } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
 
@@ -70,6 +71,24 @@ const uploadProducts = async (): Promise<void> => {
 
         const productsCollection = collection(db, "products");
 
+        console.log("Fetching existing products from Firestore...");
+        const existingDocs = await getDocs(productsCollection);
+        const existingProducts: { id: string; name: string }[] = [];
+
+        existingDocs.forEach((doc) => {
+            existingProducts.push({ id: doc.id, name: doc.data().name });
+        });
+
+        const currentProductNames = new Set(products.map((p) => p.name));
+
+        console.log("Deleting removed products...");
+        for (const existingProduct of existingProducts) {
+            if (!currentProductNames.has(existingProduct.name)) {
+                await deleteDoc(doc(productsCollection, existingProduct.id));
+                console.log(`🗑️ Deleted product: ${existingProduct.name}`);
+            }
+        }
+
         console.log("Starting product upload...");
 
         if (!Array.isArray(products)) {
@@ -82,7 +101,6 @@ const uploadProducts = async (): Promise<void> => {
             try {
                 const { id, ...productWithoutId } = product;
 
-                // Check if the product already exists
                 const existingQuery = query(productsCollection, where("name", "==", product.name));
                 const existingDocs = await getDocs(existingQuery);
 
