@@ -54,11 +54,34 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
         postalCode: '',
     });
 
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+        // Clear the error for the field being updated
+        if (formErrors[name]) {
+            setFormErrors({
+                ...formErrors,
+                [name]: ''
+            });
+        }
+    };
+
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+        if (!formData.email) errors.email = 'Email is required';
+        if (!formData.firstName) errors.firstName = 'First name is required';
+        if (!formData.lastName) errors.lastName = 'Last name is required';
+        if (!formData.address) errors.address = 'Address is required';
+        if (!formData.city) errors.city = 'City is required';
+        if (!formData.postalCode) errors.postalCode = 'Postal code is required';
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     const generateOrderTracking = (): OrderTrackingInfo => {
@@ -76,6 +99,8 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validateForm()) return;
 
         if (!stripe || !elements) {
             return;
@@ -167,9 +192,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.email ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -191,9 +217,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.firstName ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.firstName && <p className="text-red-500 text-sm mt-1">{formErrors.firstName}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Last Name</label>
@@ -202,9 +229,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.lastName ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.lastName && <p className="text-red-500 text-sm mt-1">{formErrors.lastName}</p>}
                                     </div>
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium mb-1">Address</label>
@@ -213,9 +241,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="address"
                                             value={formData.address}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.address ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.address && <p className="text-red-500 text-sm mt-1">{formErrors.address}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">City</label>
@@ -224,9 +253,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="city"
                                             value={formData.city}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.city ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.city && <p className="text-red-500 text-sm mt-1">{formErrors.city}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Postal Code</label>
@@ -235,9 +265,10 @@ const CheckoutForm: React.FC<CheckoutPageProps> = ({ cartItems: initialCartItems
                                             name="postalCode"
                                             value={formData.postalCode}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+                                            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${formErrors.postalCode ? 'border-red-500' : ''}`}
                                             required
                                         />
+                                        {formErrors.postalCode && <p className="text-red-500 text-sm mt-1">{formErrors.postalCode}</p>}
                                     </div>
                                 </div>
                             </div>

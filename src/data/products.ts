@@ -301,6 +301,7 @@ export const products: Product[] = [
           },
       ],
   }
+  
 ];
 
 export const categories = [

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation"; // Correct import for App Router
-import { ShoppingCart, Heart, Search, Menu, X, User } from "lucide-react";
+import { ShoppingCart, Heart, Search, Menu, X, User, Building2 } from "lucide-react";
 import { CartItem } from "@/types";
 import { usePathname } from "next/navigation";
 import debounce from 'lodash/debounce';
@@ -40,6 +40,10 @@ const Header: React.FC<HeaderProps> = ({ cartItems, onOpenCart, onOpenWishlist, 
         const query = e.target.value;
         setSearchQuery(query);
         debouncedSearch(query);
+    };
+
+    const handleAdminClick = () => {
+        router.push("/admin/login"); // Always go to Admin Login first
     };
 
     return (
@@ -96,6 +100,13 @@ const Header: React.FC<HeaderProps> = ({ cartItems, onOpenCart, onOpenWishlist, 
                             aria-label="Go to account"
                         >
                             <User className="w-6 h-6" />
+                        </button>
+                        <button
+                            className="p-2 hover:bg-gray-100 rounded-full"
+                            onClick={handleAdminClick}
+                            aria-label="Admin Panel"
+                        >
+                            <Building2 className="w-6 h-6" />
                         </button>
                     </div>
                 </div>

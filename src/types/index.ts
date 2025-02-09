@@ -41,3 +41,12 @@ export type Product = {
     wishlist: string[];
     cart: CartItem[];
   };
+
+  export interface AdminUser {
+    uid: string;
+    email: string;
+    role: string;
+    firstName: string;
+    lastName: string;
+    createdAt: Date;
+  }
