@@ -1,31 +1,30 @@
-export type Product = {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    images: string[];
-    category: string;
-    sizes: string[];
-    colors: Color[];
-    inStock: boolean;
-    features: string[];
-    rating: number;
-    reviews: Review[];
-  };
-  
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  sizes: string[];
+  colors: Color[];
+  inStock: boolean;
+  features: string[];
+  rating: number;
+  reviews: string[];
+}
   export type Color = {
     name: string;
     hex: string;
   };
   
-  export type Review = {
+  export interface Review {
     id: string;
     userId: string;
     userName: string;
     rating: number;
     comment: string;
     date: string;
-  };
+  }
   
   export type CartItem = {
     product: Product;

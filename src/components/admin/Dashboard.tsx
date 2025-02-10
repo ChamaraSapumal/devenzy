@@ -81,6 +81,10 @@ const AdminDashboardComponent = () => {
         { name: "Settings", tab: "settings", icon: Settings },
     ];
 
+    const handleManageProducts = () => {
+        router.push("/admin/manage-products");
+    };
+
     interface StatCardProps {
         title: string;
         value: number | string;
@@ -198,7 +202,7 @@ const AdminDashboardComponent = () => {
                                     <CardContent>
                                         <div className="space-y-4">
                                             <div className="flex justify-between">
-                                                <Input className="max-w-sm" placeholder="Search products..." />
+                                                <Button onClick={handleManageProducts}>Manage Products</Button>
                                                 <Button onClick={() => setShowNewProductForm(true)}>
                                                     Add New Product
                                                 </Button>

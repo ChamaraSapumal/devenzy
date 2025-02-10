@@ -2,12 +2,68 @@ import React from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { Product } from "@/types";
 import Link from "next/link";
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface ProductCardProps {
     product: Product;
     onAddToCart: (product: Product) => void;
     onAddToWishlist: (product: Product) => void;
 }
+
+// Get a single product by ID
+export const getProductById = async (productId: string) => {
+    try {
+        const productRef = doc(db, 'products', productId);
+        const productSnap = await getDoc(productRef);
+
+        if (productSnap.exists()) {
+            return {
+                id: productSnap.id,
+                ...productSnap.data()
+            };
+        } else {
+            console.log('No such product!');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error getting product:', error);
+        throw error;
+    }
+};
+
+// Get all products
+export const getAllProducts = async () => {
+    try {
+        const productsRef = collection(db, 'products');
+        const querySnapshot = await getDocs(productsRef);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting products:', error);
+        throw error;
+    }
+};
+
+// Get products that are in stock
+export const getInStockProducts = async () => {
+    try {
+        const productsRef = collection(db, 'products');
+        const q = query(productsRef, where('inStock', '==', true));
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting in-stock products:', error);
+        throw error;
+    }
+};
 
 const ProductCard: React.FC<ProductCardProps> = ({
     product,
@@ -27,6 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     };
 
     return (
+        // Dynamically setting the URL based on the product ID from Firestore
         <Link href={`/product/${product.id}`} className="block">
             <div className="group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                 {/* Image with hover effect */}

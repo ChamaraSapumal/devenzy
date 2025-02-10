@@ -1,142 +1,274 @@
+"use client";
 import React, { useState } from 'react';
-import { Star, Heart, ShoppingCart } from 'lucide-react';
-import { Product, Color } from '@/types';
+import { Star, Heart, Share, ShoppingCart, Minus, Plus, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+    Card,
+    CardContent,
+} from "@/components/ui/card";
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-interface ProductDetailsProps {
-    product: Product;
-    onAddToCart: (product: Product, size: string, color: Color) => void;
-    onAddToWishlist: (product: Product) => void;
+interface Product {
+    name: string;
+    category: string;
+    price: number;
+    inStock: boolean;
+    description: string;
+    features: string[];
+    sizes: string[];
+    colors: { name: string; hex: string }[];
+    images: string[];
+    rating: number;
+    reviews: { id: number; userName: string; rating: number; comment: string; date: string }[];
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({
-    product,
-    onAddToCart,
-    onAddToWishlist,
-}) => {
-    const [selectedImage, setSelectedImage] = useState(0);
-    const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
-    const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+const ProductDetail = ({ product }: { product: Product }) => {
+    const [quantity, setQuantity] = useState(1);
+    const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || "");
+    const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || null);
+    const [isWishlist, setIsWishlist] = useState(false);
+    const router = useRouter();
+
+    interface QuantityChangeAction {
+        type: 'increase' | 'decrease';
+    }
+
+    const handleQuantityChange = (action: QuantityChangeAction) => {
+        if (action.type === 'increase') {
+            setQuantity(prev => prev + 1);
+        } else if (action.type === 'decrease' && quantity > 1) {
+            setQuantity(prev => prev - 1);
+        }
+    };
 
     return (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="grid md:grid-cols-2 gap-8 p-6">
-                {/* Image gallery */}
-                <div className="space-y-4">
-                    <div className="aspect-square relative overflow-hidden rounded-lg">
-                        <img
-                            src={product.images[selectedImage]}
-                            alt={product.name}
-                            className="object-cover w-full h-full"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 gap-4">
-                        {product.images.map((image, index) => (
+        <div className="min-h-screen bg-gray-50">
+            {/* Top Navigation */}
+            <nav className="sticky top-0 z-50 bg-white shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <button
+                            onClick={() => router.back()}
+                            className="flex items-center text-gray-600 hover:text-gray-900"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <div className="flex items-center space-x-4">
                             <button
-                                key={index}
-                                onClick={() => setSelectedImage(index)}
-                                className={`aspect-square rounded-lg overflow-hidden border-2 ${selectedImage === index ? 'border-black' : 'border-transparent'
-                                    }`}
+                                onClick={() => setIsWishlist(!isWishlist)}
+                                className="p-2 hover:bg-gray-100 rounded-full"
                             >
-                                <img
-                                    src={image}
-                                    alt={`${product.name} view ${index + 1}`}
-                                    className="object-cover w-full h-full"
+                                <Heart
+                                    className={`w-5 h-5 ${isWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
                                 />
                             </button>
+                            <button className="p-2 hover:bg-gray-100 rounded-full">
+                                <Share className="w-5 h-5 text-gray-600" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Product Images */}
+                    <div className="relative">
+                        <Carousel className="w-full">
+                            <CarouselContent>
+                                {product.images.map((image, index) => (
+                                    <CarouselItem key={index}>
+                                        <Card className="border-none shadow-none">
+                                            <CardContent className="p-0">
+                                                <img
+                                                    src={image}
+                                                    alt={`${product.name} - View ${index + 1}`}
+                                                    className="w-full h-[500px] object-cover rounded-2xl"
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2" />
+                            <CarouselNext className="right-2" />
+                        </Carousel>
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="space-y-6">
+                        <div>
+                            <Badge variant="secondary" className="mb-2">
+                                {product.category}
+                            </Badge>
+                            <h1 className="text-4xl font-bold tracking-tight">{product.name}</h1>
+                            <div className="flex items-center mt-4 space-x-2">
+                                <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            className={`w-5 h-5 ${i < product.rating
+                                                ? "text-yellow-400 fill-yellow-400"
+                                                : "text-gray-300"
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-gray-600">
+                                    ({product.reviews.length} reviews)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <p className="text-3xl font-bold">
+                                ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </p>
+                            <Badge variant={product.inStock ? "success" : "destructive"}>
+                                {product.inStock ? 'In Stock' : 'Out of Stock'}
+                            </Badge>
+                        </div>
+
+                        <Tabs defaultValue="description" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="description">Description</TabsTrigger>
+                                <TabsTrigger value="features">Features</TabsTrigger>
+                                <TabsTrigger value="shipping">Shipping</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="description" className="mt-4">
+                                <p className="text-gray-600">{product.description}</p>
+                            </TabsContent>
+                            <TabsContent value="features" className="mt-4">
+                                <ul className="list-disc pl-4 text-gray-600 space-y-2">
+                                    {product.features.map((feature, index) => (
+                                        <li key={index}>{feature}</li>
+                                    ))}
+                                </ul>
+                            </TabsContent>
+                            <TabsContent value="shipping" className="mt-4">
+                                <p className="text-gray-600">
+                                    Free shipping on orders over $100. Estimated delivery: 3-5 business days
+                                </p>
+                            </TabsContent>
+                        </Tabs>
+
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-900 mb-3">Size</h3>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {product.sizes.map((size, index) => (
+                                        <Button
+                                            key={index}
+                                            variant={selectedSize === size ? "default" : "outline"}
+                                            onClick={() => setSelectedSize(size)}
+                                        >
+                                            {size}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-900 mb-3">Color</h3>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {product.colors.map((color, index) => (
+                                        <Button
+                                            key={index}
+                                            variant={selectedColor?.name === color.name ? "default" : "outline"}
+                                            onClick={() => setSelectedColor(color)}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <span
+                                                className="w-4 h-4 rounded-full border"
+                                                style={{ backgroundColor: color.hex }}
+                                            />
+                                            {color.name}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center border rounded-lg">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleQuantityChange({ type: 'decrease' })}
+                                        disabled={quantity <= 1}
+                                    >
+                                        <Minus className="w-4 h-4" />
+                                    </Button>
+                                    <span className="w-12 text-center">{quantity}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleQuantityChange({ type: 'increase' })}
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <Button
+                                    className="flex-1"
+                                    size="lg"
+                                    disabled={!product.inStock}
+                                >
+                                    <ShoppingCart className="w-5 h-5 mr-2" />
+                                    Add to Cart
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reviews Section */}
+                <section className="mt-16">
+                    <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {product.reviews.map((review) => (
+                            <Card key={review.id}>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <p className="font-semibold">{review.userName}</p>
+                                            <div className="flex items-center mt-1">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-4 h-4 ${i < review.rating
+                                                            ? "text-yellow-400 fill-yellow-400"
+                                                            : "text-gray-300"
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <time className="text-sm text-gray-500">
+                                            {new Date(review.date).toLocaleDateString()}
+                                        </time>
+                                    </div>
+                                    <p className="text-gray-600">{review.comment}</p>
+                                </CardContent>
+                            </Card>
                         ))}
                     </div>
-                </div>
-
-                {/* Product info */}
-                <div className="space-y-6">
-                    <div>
-                        <h1 className="text-2xl font-bold">{product.name}</h1>
-                        <div className="flex items-center gap-2 mt-2">
-                            <div className="flex items-center">
-                                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                                <span className="ml-1">{product.rating}</span>
-                            </div>
-                            <span className="text-gray-500">
-                                ({product.reviews.length} reviews)
-                            </span>
-                        </div>
-                        <p className="text-2xl font-bold mt-4">${product.price}</p>
-                    </div>
-
-                    {/* Color selection */}
-                    <div>
-                        <h3 className="font-semibold mb-2">Color</h3>
-                        <div className="flex gap-2">
-                            {product.colors.map((color) => (
-                                <button
-                                    key={color.name}
-                                    onClick={() => setSelectedColor(color)}
-                                    className={`w-8 h-8 rounded-full border-2 ${selectedColor.name === color.name
-                                            ? 'border-black'
-                                            : 'border-gray-300'
-                                        }`}
-                                    style={{ backgroundColor: color.hex }}
-                                    title={color.name}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Size selection */}
-                    <div>
-                        <h3 className="font-semibold mb-2">Size</h3>
-                        <div className="grid grid-cols-4 gap-2">
-                            {product.sizes.map((size) => (
-                                <button
-                                    key={size}
-                                    onClick={() => setSelectedSize(size)}
-                                    className={`py-2 rounded border ${selectedSize === size
-                                            ? 'border-black bg-black text-white'
-                                            : 'border-gray-300 hover:border-black'
-                                        }`}
-                                >
-                                    {size}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-gray-600">{product.description}</p>
-
-                    {/* Features */}
-                    <div>
-                        <h3 className="font-semibold mb-2">Features</h3>
-                        <ul className="list-disc list-inside space-y-1">
-                            {product.features.map((feature, index) => (
-                                <li key={index} className="text-gray-600">
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="space-y-4">
-                        <button
-                            onClick={() => onAddToCart(product, selectedSize, selectedColor)}
-                            className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <ShoppingCart className="w-5 h-5" />
-                            Add to Cart
-                        </button>
-                        <button
-                            onClick={() => onAddToWishlist(product)}
-                            className="w-full border border-black py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Heart className="w-5 h-5" />
-                            Add to Wishlist
-                        </button>
-                    </div>
-                </div>
-            </div>
+                </section>
+            </main>
         </div>
     );
 };
 
-export default ProductDetails;
+export default ProductDetail;

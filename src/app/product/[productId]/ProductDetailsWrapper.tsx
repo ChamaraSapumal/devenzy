@@ -1,10 +1,10 @@
 'use client';
 
-import { Product } from '@/types';
+import { Product, Color } from '@/types';
 import ProductDetails from '@/components/ProductDetails';
 
 export default function ProductDetailsWrapper({ product }: { product: Product }) {
-    const handleAddToCart = (product: Product, size: string, color: any) => {
+    const handleAddToCart = (product: Product, size: string, color: Color) => {
         console.log('Added to cart:', { product, size, color });
     };
 

@@ -8,7 +8,7 @@ export const colors: Color[] = [
   ];
 export const products: Product[] = [
   {
-    id: '1',
+    id: '5sfo9xejCg8dARvqZPlY',
     name: 'Classic Cotton T-Shirt',
     description: 'Premium cotton t-shirt with a comfortable fit and durability.',
     price: 29.99,
@@ -40,7 +40,7 @@ export const products: Product[] = [
     ]
   },
   {
-    id: '2',
+    id: 'rdtRcCHuyhOIykThYUj4',
     name: 'Slim Fit Jeans',
     description: 'Classic slim fit jeans made from premium denim.',
     price: 59.99,
@@ -72,7 +72,7 @@ export const products: Product[] = [
     ]
   },
   {
-    id: '3',
+    id: 'sAPIC7x3Cf3Y5hQngSl8',
     name: 'Elegant Evening Dress',
     description: 'Stunning evening dress perfect for special occasions.',
     price: 129.99,
@@ -198,7 +198,7 @@ export const products: Product[] = [
     ],
   },
   {
-        id: '7',
+        id: 'oHAWR1tFMI61ZKeeDpHi',
         name: 'Classic Aviator Sunglasses',
         description: 'Timeless aviator sunglasses with a lightweight metal frame and polarized lenses.',
         price: 79.99,
