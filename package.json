@@ -8,7 +8,7 @@
     "export": "next export",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "npm run build && gh-pages -d out",
+    "deploy": "next build && gh-pages -d out",
     "upload-products": "tsx src/app/scripts/uploadProducts.ts"
   },
   "dependencies": {
