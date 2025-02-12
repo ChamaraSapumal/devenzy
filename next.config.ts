@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 
-  output: 'standalone',
+  output: 'export',
   basePath: "/devenzy",
   assetPrefix: "/devenzy/",
   trailingSlash: true,
