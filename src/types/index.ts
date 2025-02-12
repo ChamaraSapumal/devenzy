@@ -10,7 +10,7 @@ export interface Product {
   inStock: boolean;
   features: string[];
   rating: number;
-  reviews: string[];
+  reviews: Review[];
 }
   export type Color = {
     name: string;

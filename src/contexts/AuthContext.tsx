@@ -6,7 +6,8 @@ import {
     GoogleAuthProvider,
     signOut as firebaseSignOut
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 interface AuthContextType {
     user: User | null;
@@ -30,20 +31,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return unsubscribe;
     }, []);
 
-    const signInWithGoogle = async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error('Error signing in with Google:', error);
-        }
-    };
 
     const signOut = async () => {
         try {
             await firebaseSignOut(auth);
         } catch (error) {
             console.error('Error signing out:', error);
+        }
+    };
+
+
+    // In your AuthContext or where you handle sign in
+    const signInWithGoogle = async () => {
+        const googleProvider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+
+            // Check if user document exists in Firestore
+            const userRef = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userRef);
+
+            // If user document doesn't exist, create it
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    userId: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: 'user' // default role
+                });
+            }
+        } catch (error) {
+            console.error('Error signing in with Google:', error);
         }
     };
 

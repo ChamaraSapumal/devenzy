@@ -1,34 +1,38 @@
-"use client"; // Required for client-side navigation
+"use client";
 
 import React, { useState, useCallback } from "react";
-import { useRouter } from "next/navigation"; // Correct import for App Router
+import { useRouter, usePathname } from "next/navigation";
 import { ShoppingCart, Heart, Search, Menu, X, User, Building2 } from "lucide-react";
-import { CartItem } from "@/types";
-import { usePathname } from "next/navigation";
 import debounce from 'lodash/debounce';
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-    cartItems: CartItem[];
+    cartItems: { quantity: number }[];
     onOpenCart: () => void;
     onOpenWishlist: () => void;
-    onSearch?: (query: string) => void;
+    onSearch: (query: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ cartItems, onOpenCart, onOpenWishlist, onSearch }) => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+const Header: React.FC<HeaderProps> = ({ cartItems = [], onOpenCart, onOpenWishlist, onSearch }) => {
     const [searchQuery, setSearchQuery] = useState("");
-    const router = useRouter(); // Next.js navigation
+    const router = useRouter();
     const pathname = usePathname();
 
     const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    // Debounce the search to avoid too many updates
     const debouncedSearch = useCallback(
-        debounce((query: string) => {
+        debounce((query) => {
             if (onSearch) {
                 onSearch(query);
             }
-            // If we're not on the main product listing page, redirect there
             if (pathname !== '/') {
                 router.push(`/?search=${encodeURIComponent(query)}`);
             }
@@ -36,100 +40,130 @@ const Header: React.FC<HeaderProps> = ({ cartItems, onOpenCart, onOpenWishlist, 
         [onSearch, pathname, router]
     );
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    interface SearchChangeEvent extends React.ChangeEvent<HTMLInputElement> { }
+
+    const handleSearchChange = (e: SearchChangeEvent) => {
         const query = e.target.value;
         setSearchQuery(query);
         debouncedSearch(query);
     };
 
-    const handleAdminClick = () => {
-        router.push("/admin/login"); // Always go to Admin Login first
-    };
-
     return (
-        <header className="sticky top-0 z-50 bg-white shadow-md">
-            <div className="max-w-7xl mx-auto px-4">
-                <div className="flex justify-between items-center h-16">
-                    {/* Logo and mobile menu */}
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden">
-                            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                        </button>
-                        <h1 className="text-xl font-bold">Fashion Shop</h1>
-                    </div>
-
-                    {/* Search bar - hidden on mobile */}
-                    <div className="hidden md:block flex-1 max-w-md mx-4">
-                        <div className="relative">
-                            <input
-                                type="text"
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="md:hidden">
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">Toggle menu</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-80">
+                        <SheetHeader>
+                            <SheetTitle>Menu</SheetTitle>
+                        </SheetHeader>
+                        <div className="mt-4 space-y-4">
+                            <Input
+                                type="search"
                                 placeholder="Search products..."
                                 value={searchQuery}
                                 onChange={handleSearchChange}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                aria-label="Search products"
+                                className="w-full"
                             />
-                            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                            <nav className="space-y-2">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start"
+                                    onClick={() => router.push("/categories")}
+                                >
+                                    Categories
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start"
+                                    onClick={() => router.push("/new-arrivals")}
+                                >
+                                    New Arrivals
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start"
+                                    onClick={() => router.push("/sale")}
+                                >
+                                    Sale
+                                </Button>
+                            </nav>
                         </div>
-                    </div>
+                    </SheetContent>
+                </Sheet>
 
-                    {/* Icons */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={onOpenWishlist}
-                            className="p-2 hover:bg-gray-100 rounded-full"
-                            aria-label="Open wishlist"
-                        >
-                            <Heart className="w-6 h-6" />
-                        </button>
-                        <button
-                            onClick={onOpenCart}
-                            className="p-2 hover:bg-gray-100 rounded-full relative"
-                            aria-label="Open shopping cart"
-                        >
-                            <ShoppingCart className="w-6 h-6" />
-                            {cartItemsCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                    {cartItemsCount}
-                                </span>
-                            )}
-                        </button>
-                        <button
-                            className="p-2 hover:bg-gray-100 rounded-full"
-                            onClick={() => router.push("/account")}
-                            aria-label="Go to account"
-                        >
-                            <User className="w-6 h-6" />
-                        </button>
-                        <button
-                            className="p-2 hover:bg-gray-100 rounded-full"
-                            onClick={handleAdminClick}
-                            aria-label="Admin Panel"
-                        >
-                            <Building2 className="w-6 h-6" />
-                        </button>
+                <div className="flex items-center gap-4">
+                    <h1
+                        onClick={() => router.push("/")}
+                        className="text-xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                        Fashion Shop
+                    </h1>
+                </div>
+
+                <div className="hidden md:flex flex-1 items-center justify-center px-6">
+                    <div className="w-full max-w-md relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search products..."
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            className="w-full pl-10 bg-secondary"
+                        />
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hidden md:flex"
+                        onClick={onOpenWishlist}
+                    >
+                        <Heart className="h-5 w-5" />
+                        <span className="sr-only">Wishlist</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative"
+                        onClick={onOpenCart}
+                    >
+                        <ShoppingCart className="h-5 w-5" />
+                        {cartItemsCount > 0 && (
+                            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-xs font-bold text-primary-foreground flex items-center justify-center">
+                                {cartItemsCount}
+                            </span>
+                        )}
+                        <span className="sr-only">Cart</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.push("/account")}
+                    >
+                        <User className="h-5 w-5" />
+                        <span className="sr-only">Account</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.push("/admin/login")}
+                    >
+                        <Building2 className="h-5 w-5" />
+                        <span className="sr-only">Admin</span>
+                    </Button>
                 </div>
             </div>
-
-            {/* Mobile menu */}
-            {isMenuOpen && (
-                <div className="md:hidden border-t">
-                    <div className="p-4 space-y-4">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                aria-label="Search products"
-                            />
-                            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                        </div>
-                    </div>
-                </div>
-            )}
         </header>
     );
 };

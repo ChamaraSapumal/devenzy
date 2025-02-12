@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  // Replace with your Firebase config
+  
   apiKey: "AIzaSyCHRWq6ao_wi33wza9BXaGsSv8s1_hYbng",
   authDomain: "fashion-shop-99386.firebaseapp.com",
   projectId: "fashion-shop-99386",

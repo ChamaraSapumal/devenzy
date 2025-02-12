@@ -1,12 +1,6 @@
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
-
-export async function createMetadata({ params }: { params: { id: string } }) {
-    const productDoc = await getDoc(doc(db, "products", params.id));
-    const product = productDoc.data();
-
+export function generateMetadata({ params }: { params: { id: string } }) {
     return {
-        title: `Edit ${product?.name || 'Product'} - Admin Dashboard`,
-        description: `Edit details for ${product?.name}`,
+        title: `Edit Product - Admin Dashboard`,
+        description: `Edit product details`,
     };
 }

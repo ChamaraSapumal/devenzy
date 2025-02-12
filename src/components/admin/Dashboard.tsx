@@ -1,8 +1,10 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import ManageProducts from "@/app/admin/manage-products/page";
 import {
     Table,
     TableBody,
@@ -11,18 +13,24 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Package, Users, ShoppingCart, Settings, LogOut } from "lucide-react";
-import NewProductForm from "@/components/NewProductForm"; // Adjust the import path as necessary
-import ProductList from "@/components/ProductList"; // Adjust the import path as necessary
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Package, Users, ShoppingCart, Settings, LogOut, Menu, TrendingUp, Activity } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore"
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-
+import { withAdminAuth } from "./AdminAuth";
 
 const AdminDashboardComponent = () => {
     const [activeTab, setActiveTab] = useState("overview");
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [stats, setStats] = useState({
         totalProducts: 0,
         totalUsers: 0,
@@ -34,27 +42,20 @@ const AdminDashboardComponent = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Fetch products count
-                const productsSnapshot = await getDocs(collection(db, "products"));
-                const productsCount = productsSnapshot.size;
+                const [productsSnapshot, usersSnapshot, ordersSnapshot] = await Promise.all([
+                    getDocs(collection(db, "products")),
+                    getDocs(collection(db, "users")),
+                    getDocs(collection(db, "orders")),
+                ]);
 
-                // Fetch users count
-                const usersSnapshot = await getDocs(collection(db, "users"));
-                const usersCount = usersSnapshot.size;
-
-                // Fetch orders count and calculate revenue
-                const ordersSnapshot = await getDocs(collection(db, "orders"));
-                const ordersCount = ordersSnapshot.size;
-                let totalRevenue = 0;
-                ordersSnapshot.forEach((doc) => {
-                    const orderData = doc.data();
-                    totalRevenue += orderData.total || 0;
-                });
+                const totalRevenue = ordersSnapshot.docs.reduce((sum, doc) =>
+                    sum + (doc.data().total || 0), 0
+                );
 
                 setStats({
-                    totalProducts: productsCount,
-                    totalUsers: usersCount,
-                    totalOrders: ordersCount,
+                    totalProducts: productsSnapshot.size,
+                    totalUsers: usersSnapshot.size,
+                    totalOrders: ordersSnapshot.size,
                     revenue: totalRevenue,
                 });
             } catch (error) {
@@ -75,31 +76,39 @@ const AdminDashboardComponent = () => {
     };
 
     const navigation = [
-        { name: "Overview", tab: "overview", icon: Package },
-        { name: "Products", tab: "products", icon: ShoppingCart },
+        { name: "Overview", tab: "overview", icon: Activity },
+        { name: "Products", tab: "products", icon: Package },
         { name: "Users", tab: "users", icon: Users },
+        { name: "Orders", tab: "orders", icon: ShoppingCart },
+        { name: "Analytics", tab: "analytics", icon: TrendingUp },
         { name: "Settings", tab: "settings", icon: Settings },
     ];
-
-    const handleManageProducts = () => {
-        router.push("/admin/manage-products");
-    };
 
     interface StatCardProps {
         title: string;
         value: number | string;
         icon: React.ComponentType<{ className?: string }>;
+        trend?: number;
     }
 
-    const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon }) => (
-        <Card className="flex-1">
-            <CardContent className="flex items-center p-6">
-                <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mr-4">
-                    <Icon className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                    <h3 className="text-2xl font-bold">{value}</h3>
+    const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend }) => (
+        <Card className="overflow-hidden">
+            <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <Icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                            <h3 className="text-2xl font-bold mt-1">{value}</h3>
+                        </div>
+                    </div>
+                    {trend && (
+                        <div className={`text-sm font-medium ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {trend > 0 ? '+' : ''}{trend}%
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -108,170 +117,33 @@ const AdminDashboardComponent = () => {
     const Overview = () => (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Total Products" value={stats.totalProducts} icon={Package} />
-                <StatCard title="Total Users" value={stats.totalUsers} icon={Users} />
-                <StatCard title="Total Orders" value={stats.totalOrders} icon={ShoppingCart} />
-                <StatCard title="Revenue" value={`$${stats.revenue.toFixed(2)}`} icon={Package} />
+                <StatCard
+                    title="Total Products"
+                    value={stats.totalProducts}
+                    icon={Package}
+                    trend={12}
+                />
+                <StatCard
+                    title="Total Users"
+                    value={stats.totalUsers}
+                    icon={Users}
+                    trend={8}
+                />
+                <StatCard
+                    title="Total Orders"
+                    value={stats.totalOrders}
+                    icon={ShoppingCart}
+                    trend={-3}
+                />
+                <StatCard
+                    title="Revenue"
+                    value={`$${stats.revenue.toLocaleString()}`}
+                    icon={TrendingUp}
+                    trend={15}
+                />
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent Orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Order ID</TableHead>
-                                <TableHead>Customer</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Amount</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>{/* Add order data here */}</TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-    );
-
-    const [showNewProductForm, setShowNewProductForm] = useState(false);
-
-    return (
-        <div className="flex min-h-screen">
-            {/* Sidebar */}
-            <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-gray-900">
-                <div className="flex-1 flex flex-col min-h-0">
-                    <div className="flex items-center h-16 flex-shrink-0 px-4 bg-gray-800 border-b border-gray-700">
-                        <h1 className="text-xl font-bold text-white">Fashion Shop Admin</h1>
-                    </div>
-                    <nav className="flex-1 px-2 py-4 space-y-1">
-                        {navigation.map((item) => (
-                            <Button
-                                key={item.tab}
-                                variant={activeTab === item.tab ? "secondary" : "ghost"}
-                                className={`w-full justify-start rounded-lg transition-all duration-200 ${activeTab === item.tab
-                                    ? "bg-gray-700 text-white hover:bg-gray-600"
-                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    }`}
-                                onClick={() => setActiveTab(item.tab)}
-                            >
-                                <item.icon className="mr-3 h-5 w-5" />
-                                {item.name}
-                            </Button>
-                        ))}
-                        <Button
-                            variant="ghost"
-                            className="w-full justify-start text-red-400 hover:text-red-500 hover:bg-red-400/10 rounded-lg transition-all duration-200"
-                            onClick={handleLogout}
-                        >
-                            <LogOut className="mr-3 h-5 w-5" />
-                            Logout
-                        </Button>
-                    </nav>
-                </div>
-            </div>
-
-            {/* Main content */}
-            <div className="lg:pl-64 flex flex-col flex-1">
-                <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
-                    {activeTab === "overview" && <Overview />}
-                    {activeTab === "products" && (
-                        <div className="space-y-6">
-                            {showNewProductForm ? (
-                                <div className="mb-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowNewProductForm(false)}
-                                        className="mb-4"
-                                    >
-                                        ← Back to Products
-                                    </Button>
-                                    <NewProductForm
-                                        onSuccess={() => {
-                                            setShowNewProductForm(false);
-                                            // Optionally refresh your products list here
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Products Management</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between">
-                                                <Button onClick={handleManageProducts}>Manage Products</Button>
-                                                <Button onClick={() => setShowNewProductForm(true)}>
-                                                    Add New Product
-                                                </Button>
-                                            </div>
-
-                                            <ProductList />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
-                        </div>
-                    )}
-                </main>
-            </div>
-        </div>
-    );
-};
-
-// Corrected withAdminAuth function
-interface WithAdminAuthProps {
-    [key: string]: any;
-}
-
-interface UserData {
-    role: string;
-}
-
-const withAdminAuth = (WrappedComponent: React.ComponentType<any>) => {
-    return (props: WithAdminAuthProps) => {
-        const [isAdmin, setIsAdmin] = useState<boolean>(false);
-        const [loading, setLoading] = useState<boolean>(true);
-        const router = useRouter();
-
-        useEffect(() => {
-            const checkAdmin = async () => {
-                const user = auth.currentUser;
-                if (!user) {
-                    router.replace("/admin/login");
-                    return;
-                }
-
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data() as UserData;
-                    if (userData.role === "admin") {
-                        setIsAdmin(true);
-                    } else {
-                        router.replace("/admin/login");
-                    }
-                } else {
-                    router.replace("/admin/login");
-                }
-                setLoading(false);
-            };
-
-            checkAdmin();
-        }, [router]);
-
-        if (loading) return (
-            <div className="space-y-4 p-4">
-                {/* Skeleton for Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Skeleton height={150} width="100%" />
-                    <Skeleton height={150} width="100%" />
-                    <Skeleton height={150} width="100%" />
-                    <Skeleton height={150} width="100%" />
-                </div>
-
-                {/* Skeleton for Recent Orders Table */}
+            <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Recent Orders</CardTitle>
@@ -280,36 +152,30 @@ const withAdminAuth = (WrappedComponent: React.ComponentType<any>) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>
-                                        <Skeleton width={80} />
-                                    </TableHead>
-                                    <TableHead>
-                                        <Skeleton width={120} />
-                                    </TableHead>
-                                    <TableHead>
-                                        <Skeleton width={80} />
-                                    </TableHead>
-                                    <TableHead>
-                                        <Skeleton width={60} />
-                                    </TableHead>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Customer</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {/* Skeleton rows for the table */}
-                                {Array.from({ length: 5 }).map((_, index) => (
-                                    <TableRow key={index}>
+                                {[
+                                    { id: "ORD001", customer: "John Doe", status: "Completed", amount: "$250.00" },
+                                    { id: "ORD002", customer: "Jane Smith", status: "Processing", amount: "$180.50" },
+                                    { id: "ORD003", customer: "Mike Johnson", status: "Pending", amount: "$320.75" },
+                                ].map((order) => (
+                                    <TableRow key={order.id}>
+                                        <TableCell className="font-medium">{order.id}</TableCell>
+                                        <TableCell>{order.customer}</TableCell>
                                         <TableCell>
-                                            <Skeleton width={100} />
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        ${order.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                    order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-yellow-100 text-yellow-800'}`}>
+                                                {order.status}
+                                            </span>
                                         </TableCell>
-                                        <TableCell>
-                                            <Skeleton width={150} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Skeleton width={80} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Skeleton width={70} />
-                                        </TableCell>
+                                        <TableCell className="text-right">{order.amount}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -317,29 +183,135 @@ const withAdminAuth = (WrappedComponent: React.ComponentType<any>) => {
                     </CardContent>
                 </Card>
 
-                {/* Skeleton for the Product List Search Input and Button */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Products Management</CardTitle>
+                        <CardTitle>Recent Activity</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            <div className="flex justify-between">
-                                <Skeleton width={200} height={40} />
-                                <Skeleton width={120} height={40} />
-                            </div>
-                        </div>
+                        <ScrollArea className="h-[300px] pr-4">
+                            {[
+                                { time: "2 minutes ago", action: "New order received", user: "Sarah Wilson" },
+                                { time: "1 hour ago", action: "Product stock updated", user: "Admin System" },
+                                { time: "3 hours ago", action: "New user registered", user: "James Brown" },
+                                { time: "5 hours ago", action: "Refund processed", user: "Support Team" },
+                                { time: "1 day ago", action: "New product added", user: "Admin System" },
+                            ].map((activity, index) => (
+                                <div key={index} className="flex items-center py-3">
+                                    <div className="w-2 h-2 bg-primary rounded-full mr-4" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{activity.action}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            by {activity.user} • {activity.time}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </ScrollArea>
                     </CardContent>
                 </Card>
             </div>
+        </div>
+    );
+
+    const ProductsTab = () => {
+        return (
+            <div className="w-full">
+                <ManageProducts />
+            </div>
         );
-
-        if (!isAdmin) return null;
-
-        return <WrappedComponent {...props} />;
     };
+
+
+    return (
+        <div className="flex min-h-screen bg-background">
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden fixed top-4 left-4 z-50">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Menu className="h-5 w-5" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-64 p-0">
+                        <SheetHeader className="p-4 bg-primary text-primary-foreground">
+                            <SheetTitle>Fashion Shop Admin</SheetTitle>
+                        </SheetHeader>
+                        <ScrollArea className="h-[calc(100vh-64px)]">
+                            <div className="p-4 space-y-2">
+                                {navigation.map((item) => (
+                                    <Button
+                                        key={item.tab}
+                                        variant={activeTab === item.tab ? "secondary" : "ghost"}
+                                        className="w-full justify-start"
+                                        onClick={() => {
+                                            setActiveTab(item.tab);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                    >
+                                        <item.icon className="mr-3 h-5 w-5" />
+                                        {item.name}
+                                    </Button>
+                                ))}
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
+                                    onClick={handleLogout}
+                                >
+                                    <LogOut className="mr-3 h-5 w-5" />
+                                    Logout
+                                </Button>
+                            </div>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
+            </div>
+
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r">
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary text-primary-foreground">
+                        <h1 className="text-xl font-bold">Fashion Shop Admin</h1>
+                    </div>
+                    <ScrollArea className="flex-1">
+                        <nav className="flex-1 px-4 py-4 space-y-2">
+                            {navigation.map((item) => (
+                                <Button
+                                    key={item.tab}
+                                    variant={activeTab === item.tab ? "secondary" : "ghost"}
+                                    className="w-full justify-start"
+                                    onClick={() => setActiveTab(item.tab)}
+                                >
+                                    <item.icon className="mr-3 h-5 w-5" />
+                                    {item.name}
+                                </Button>
+                            ))}
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="mr-3 h-5 w-5" />
+                                Logout
+                            </Button>
+                        </nav>
+                    </ScrollArea>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="lg:pl-64 flex flex-col flex-1">
+                <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
+                    {activeTab === "overview" && <Overview />}
+                    {activeTab === "products" && <ProductsTab />}
+                    {/* Add other tab content components here */}
+                </main>
+            </div>
+        </div>
+    );
 };
 
-
 export const AdminDashboard = withAdminAuth(AdminDashboardComponent);
+
 export default AdminDashboard;
+
+// Removed duplicate function implementation
