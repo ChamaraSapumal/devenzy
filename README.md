@@ -1,36 +1,184 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js 15 E-commerce Platform
 
-## Getting Started
+A modern, full-featured e-commerce platform built with Next.js 15, featuring a responsive design, admin dashboard, and seamless payment processing.
 
-First, run the development server:
+![Project Version](https://img.shields.io/badge/Next.js-15.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+## ✨ Features
+
+- **Modern Tech Stack**: Built with Next.js 15, TypeScript, and Tailwind CSS
+- **User Authentication**: Secure Firebase authentication system
+- **Product Management**: Complete admin dashboard for product management
+- **Shopping Experience**:
+  - Interactive product galleries
+  - Shopping cart functionality
+  - Secure checkout process
+  - Payment processing integration
+- **Responsive Design**: Mobile-first approach using modern UI components
+- **Admin Features**:
+  - Protected admin routes
+  - Product creation and management
+  - Order tracking
+  - Dashboard analytics
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18.0 or later
+- npm or yarn
+- Firebase account
+- Stripe account (for payments)
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/your-repo-name.git
+cd your-repo-name
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your environment variables:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+STRIPE_SECRET_KEY=your_stripe_secret
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to see your application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+├── app/                      # Next.js 15 app directory
+│   ├── account/             # User account pages
+│   ├── admin/               # Admin section
+│   │   ├── dashboard/       # Admin dashboard
+│   │   ├── manage-products/ # Product management
+│   ├── checkout/           # Checkout process
+│   └── product/            # Product pages
+├── components/             # React components
+│   ├── admin/             # Admin-specific components
+│   └── ui/                # Reusable UI components
+├── contexts/              # React contexts
+├── hooks/                # Custom hooks
+├── lib/                  # Utility libraries
+├── types/                # TypeScript types
+└── utils/                # Utility functions
+```
 
-## Learn More
+## 🔧 Configuration
 
-To learn more about Next.js, take a look at the following resources:
+### Firebase Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create a new Firebase project
+2. Enable Authentication and Firestore
+3. Add your Firebase configuration to `lib/firebase.ts`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Stripe Integration
 
-## Deploy on Vercel
+1. Create a Stripe account
+2. Add your Stripe secret key to environment variables
+3. Configure webhook endpoints
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Commands
+
+- `npm run dev` - Start development server
+- `npm run build` - Build production bundle
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests (when implemented)
+
+### Adding New Products
+
+Use the admin dashboard or the script:
+
+```bash
+npm run upload-products
+```
+
+## 📱 Features Implementation
+
+### Authentication Flow
+
+The application uses Firebase Authentication with the following features:
+
+- Email/Password authentication
+- Admin role management
+- Protected routes
+
+### Product Management
+
+Admins can:
+
+- Create/Edit/Delete products
+- Manage inventory
+- View orders
+- Process refunds
+
+### Shopping Cart
+
+Implemented using React Context with:
+
+- Persistent storage
+- Real-time updates
+- Price calculations
+
+## 🔐 Security
+
+- Protected API routes
+- Secure admin authentication
+- XSS protection
+- CSRF prevention
+- Rate limiting on sensitive endpoints
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Firebase](https://firebase.google.com/)
+- [Stripe](https://stripe.com/)
+
+## 📞 Support
+
+For support, email support@yourdomain.com or open an issue in the repository.
