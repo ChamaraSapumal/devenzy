@@ -1,4 +1,4 @@
-// ProductPage.tsx (Client Component)
+// ProductPage.tsx
 "use client";
 
 import React from "react";

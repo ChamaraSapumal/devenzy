@@ -1,4 +1,3 @@
-"use client";
 import React, { useState } from 'react';
 import { Star, Heart, Share, ShoppingCart, Minus, Plus, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -180,7 +179,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
                                     className={`w-5 h-5 ${isWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
                                 />
                             </Button>
-                            <ShareProduct product={product} url={window.location.href} />
+                            <ShareProduct product={product} />
                         </div>
                     </div>
                 </div>

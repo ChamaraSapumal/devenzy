@@ -1,6 +1,22 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+interface ImagesConfig {
+  unoptimized: boolean;
+}
 
+interface WebpackConfig {
+  (config: any): any;
+}
+
+interface NextConfig {
+  output: string;
+  basePath: string;
+  assetPrefix: string;
+  trailingSlash: boolean;
+  images: ImagesConfig;
+  webpack: WebpackConfig;
+}
+
+const nextConfig: NextConfig = {
   output: 'export',
   basePath: "/devenzy",
   assetPrefix: "/devenzy/",
@@ -8,7 +24,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  distDir: "out",
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
