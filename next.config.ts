@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
       fs: false,
     };
     return config;
-  },
+  }
 };
 
 module.exports = nextConfig;

@@ -1,3 +1,5 @@
+// components/ProductCard.tsx
+"use client";
 import React from "react";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { Product } from "@/types";

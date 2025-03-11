@@ -1,3 +1,4 @@
+// app/product/[productId]/page.tsx
 import { db } from "@/lib/firebase";
 import { doc, getDoc, Timestamp, collection, getDocs } from "firebase/firestore";
 import { Product, Review } from "@/types";
@@ -13,61 +14,50 @@ interface FirestoreProduct extends Omit<Product, 'reviews' | 'id'> {
     reviews: FirestoreReview[];
 }
 
+export interface PageProps {
+    params: Promise<PageParams>;
+}
+
 type PageParams = {
     productId: string;
 };
 
-export interface PageProps {
-    params: Promise<PageParams>;
-    searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}
-
-// Helper function to get product data
 const getProductData = async (productId: string): Promise<Product | null> => {
     try {
         const productRef = doc(db, "products", productId);
         const productDoc = await getDoc(productRef);
 
-        if (!productDoc.exists()) {
-            return null;
-        }
+        if (!productDoc.exists()) return null;
 
         const data = productDoc.data() as FirestoreProduct;
 
-        if (!data.name || !data.description || typeof data.price !== 'number') {
-            console.error("Invalid product data structure");
-            return null;
-        }
-
-        // Create a plain object with only the data we need
-        const processedProduct = {
+        return {
             id: productDoc.id,
             name: data.name,
             description: data.description,
             price: data.price,
             images: data.images || [],
-            category: data.category || '',
+            category: data.category || "",
             sizes: data.sizes || [],
             colors: data.colors || [],
             inStock: data.inStock || false,
             features: data.features || [],
             rating: data.rating || 0,
-            reviews: (data.reviews || []).map(review => ({
+            reviews: (data.reviews || []).map((review) => ({
                 id: review.id,
                 userId: review.userId,
                 userName: review.userName,
                 rating: review.rating,
                 comment: review.comment,
-                date: review.date instanceof Timestamp
-                    ? review.date.toDate().toISOString()
-                    : new Date(review.date).toISOString()
-            }))
+                date:
+                    review.date instanceof Timestamp
+                        ? review.date.toDate().toISOString()
+                        : new Date(review.date).toISOString(),
+            })),
         };
-
-        return processedProduct;
     } catch (error) {
         console.error("Error fetching product data:", error);
-        throw error;
+        return null;
     }
 };
 
@@ -85,42 +75,29 @@ export async function generateStaticParams() {
     }
 }
 
-export async function generateMetadata(
-    { params }: { params: Promise<PageParams> }
-): Promise<Metadata> {
-    const resolvedParams = await params;
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<PageParams>;
+}): Promise<Metadata> {
+    const { productId } = await params; // Add await here
     try {
-        const product = await getProductData(resolvedParams.productId);
-
+        const product = await getProductData(productId);
         if (!product) {
             return {
-                title: 'Product Not Found',
-                description: 'The requested product could not be found',
+                title: "Product Not Found",
+                description: "The requested product could not be found",
             };
         }
-
-        return {
-            title: `${product.name} - Fashion Shop`,
-            description: product.description,
-        };
+        return { title: `${product.name} - Fashion Shop`, description: product.description };
     } catch (error) {
         console.error("Error generating metadata:", error);
-        return {
-            title: 'Product - Fashion Shop',
-            description: 'Product details',
-        };
+        return { title: "Product - Fashion Shop", description: "Product details" };
     }
 }
 
-// Page component
-export default async function Page({ params, searchParams }: PageProps) {
-    const resolvedParams = await params;
-    const { productId } = resolvedParams;
-
-    if (!productId) {
-        notFound();
-    }
-
+export default async function Page({ params }: PageProps) {
+    const { productId } = await params; // Add await here
     const product = await getProductData(productId);
 
     if (!product) {

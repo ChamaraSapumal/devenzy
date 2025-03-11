@@ -1,14 +1,16 @@
 // components/ProductClientWrapper.tsx
-'use client';
+"use client"; // ✅ Ensure this is a client component
 
+import React from "react";
+import ProductDetail from "./ProductDetails";
 import { Product } from "@/types";
-import ProductWrapper from "./ProductWrapper";
 
 interface ProductClientWrapperProps {
     productData: Product;
 }
 
-export default function ProductClientWrapper({ productData }: ProductClientWrapperProps) {
-    // Handle any client-side state or event handlers here
-    return <ProductWrapper initialProduct={productData} />;
-}
+const ProductClientWrapper: React.FC<ProductClientWrapperProps> = ({ productData }) => {
+    return <ProductDetail product={productData} />;
+};
+
+export default ProductClientWrapper;
